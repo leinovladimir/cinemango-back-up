@@ -2,6 +2,9 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
+    environment:
+      - PORT=3001
+      - FRONTEND_URL=https://e008kgok8o4og0kw000wggos.cinemango.org
 
   frontend:
     build: ./frontend
@@ -10,3 +13,5 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:3001

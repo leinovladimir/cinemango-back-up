@@ -4,9 +4,10 @@ import worksRouter from './routes/works.js';
 import backupRouter from './routes/backup.js';
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
-app.use(cors());
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 app.use('/api/works', worksRouter);
