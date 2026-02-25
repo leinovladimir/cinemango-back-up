@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchWorks, startBackup, subscribeToProgress } from './api.js';
+import { fetchWorks, startBackup, subscribeToProgress, downloadUrl } from './api.js';
 import GalleryList from './components/GalleryList.jsx';
 import BackupProgress from './components/BackupProgress.jsx';
+import LoginForm from './components/LoginForm.jsx';
 
 export default function App() {
+  const [authenticated, setAuthenticated] = useState(!!sessionStorage.getItem('password'));
   const [works, setWorks] = useState([]);
   const [error, setError] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -18,14 +20,27 @@ export default function App() {
   const unsubscribeRef = useRef(null);
 
   useEffect(() => {
+    if (!authenticated) return;
     fetchWorks()
       .then((data) => {
         setWorks(data);
         const total = data.reduce((sum, w) => sum + (w.gallery_images?.length || 0), 0);
         setProgress((p) => ({ ...p, total }));
       })
-      .catch((err) => setError(err.message));
-  }, []);
+      .catch((err) => {
+        if (err.message === '401') {
+          sessionStorage.removeItem('password');
+          setAuthenticated(false);
+        } else {
+          setError(err.message);
+        }
+      });
+  }, [authenticated]);
+
+  const handleLogin = async (password) => {
+    sessionStorage.setItem('password', password);
+    setAuthenticated(true);
+  };
 
   const handleStart = async () => {
     try {
@@ -59,10 +74,19 @@ export default function App() {
       unsubscribeRef.current = unsubscribe;
       await startBackup();
     } catch (err) {
-      setError(err.message);
+      if (err.message === '401') {
+        sessionStorage.removeItem('password');
+        setAuthenticated(false);
+      } else {
+        setError(err.message);
+      }
       setIsRunning(false);
     }
   };
+
+  if (!authenticated) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
 
   return (
     <div className="app">
@@ -79,7 +103,12 @@ export default function App() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      <BackupProgress progress={progress} isRunning={isRunning} isDone={isDone} />
+      <BackupProgress
+        progress={progress}
+        isRunning={isRunning}
+        isDone={isDone}
+        downloadHref={downloadUrl()}
+      />
 
       <GalleryList works={works} galleryStatus={galleryStatus} />
     </div>

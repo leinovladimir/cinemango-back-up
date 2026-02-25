@@ -1,4 +1,4 @@
-export default function BackupProgress({ progress, isRunning, isDone }) {
+export default function BackupProgress({ progress, isRunning, isDone, downloadHref }) {
   if (!isRunning && !isDone) return null;
 
   const percent = progress.total > 0
@@ -22,7 +22,7 @@ export default function BackupProgress({ progress, isRunning, isDone }) {
           <p className="done-message">
             Downloaded {progress.downloaded} files
           </p>
-          <a className="btn-download" href="/api/backup/download" download>
+          <a className="btn-download" href={downloadHref} download>
             Download ZIP
           </a>
         </div>

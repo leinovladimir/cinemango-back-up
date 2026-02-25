@@ -5,6 +5,7 @@ services:
     environment:
       - PORT=3001
       - FRONTEND_URL=https://e008kgok8o4og0kw000wggos.cinemango.org
+      - PASSWORD=1234
 
   frontend:
     build: ./frontend
